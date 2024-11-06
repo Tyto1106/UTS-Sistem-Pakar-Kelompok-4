@@ -118,7 +118,6 @@ def diagnose_route():
     
     # Filter hasil diagnosis untuk nilai CF > 0
     hasil_diagnosis_filtered = [diagnosis for diagnosis in hasil_diagnosis if diagnosis[1] > 0]
-    hasil_diagnosis_filtered.sort(key=lambda x: x[1], reverse=True)
 
     # Jika tidak ada hasil diagnosis dengan CF > 0, tampilkan pesan "tidak ada kerusakan yang terjadi"
     if not hasil_diagnosis_filtered:
