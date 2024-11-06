@@ -109,7 +109,7 @@
 <body>
     <div class="diag-container">
         <h2>Hasil Diagnosa</h2>
-
+    
         {% if diagnosis_results %}
             <div class="penyakit-utama">
                 <p>Diagnosis Anda menunjukkan kemungkinan:</p>
@@ -123,6 +123,8 @@
                 <h3>Solusi yang Direkomendasikan:</h3>
                 <p>{{ diagnosis_results[0][2] }}</p>
             </div>
+        {% else %}
+            <p>{{ no_damage_message }}</p>
         {% endif %}
 
         <div class="button-container">
