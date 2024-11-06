@@ -1,8 +1,5 @@
 from flask import Flask
-from flask import  render_template
-from flask import request
-from flask import redirect
-from flask import url_for
+from flask import render_template, request
 import os
 
 main = Flask(__name__)
@@ -16,7 +13,7 @@ def hitung_cf(cf_pengguna, cf_pakar):
 def combine_cf(cf_lama, cf_baru):
     
     # Gabungkan 2 nilai CF
-    return cf_lama + cf_baru * (1 - cf_lama)
+    return cf_lama + cf_baru - (cf_baru * cf_lama)
 
 # Fungsi untuk mendapatkan nilai CF dari input user
 def get_cf_pengguna(choice):
@@ -38,8 +35,8 @@ def load_knowledge_base_from_file():
                 if not line:
                     continue
                 if line.startswith("K"):  # Baris yang memulai kode penyakit
-                    kode_kerusakan, penyakit_name = line.split(" - ")
-                    knowledge_base[kode_kerusakan] = {'name': penyakit_name, 'symptoms': {}, 'solution': ''}
+                    kode_kerusakan, nama_kerusakan = line.split(" - ")
+                    knowledge_base[kode_kerusakan] = {'name': nama_kerusakan, 'symptoms': {}, 'solution': ''}
                 elif line.startswith("T"):  # Baris yang memulai kode gejala
                     gejala_code, rest = line.split(": ")
                     gejala_name, weight = rest.split(" - ")
@@ -59,12 +56,12 @@ def diagnose(gejala_user, knowledge_base):
     hasil_diagnosis = []
     
     # Iterasi melalui setiap kerusakan dalam knowledge base
-    for kode_kerusakan, penyakit_data in knowledge_base.items():
+    for kode_kerusakan, data_kerusakan in knowledge_base.items():
         cf_combine = 0.0
         match_found = False
         
         # Iterasi melalui setiap gejala untuk penyakit
-        for gejala_code, cf_pakar in penyakit_data['symptoms'].items():
+        for gejala_code, cf_pakar in data_kerusakan['symptoms'].items():
             # Cek apakah gejala user cocok dengan gejala penyakit
             cf_pengguna = gejala_user.get(gejala_code, 0.0)
             if cf_pengguna > 0:  # Hanya jika ada CF dari user
@@ -74,7 +71,7 @@ def diagnose(gejala_user, knowledge_base):
 
         # Hanya tambahkan hasil jika ada gejala yang cocok
         if match_found:
-            hasil_diagnosis.append((penyakit_data['name'], cf_combine, penyakit_data['solution'] ))
+            hasil_diagnosis.append((data_kerusakan['name'], cf_combine, data_kerusakan['solution'] ))
 
     # Mengurutkan hasil berdasarkan nilai CF tertinggi
     hasil_diagnosis.sort(key=lambda x: x[1], reverse=True)
@@ -100,8 +97,8 @@ def index():
         return "Error: File knowledge base tidak ditemukan atau kosong."
     
     symptoms = {}
-    for penyakit_data in knowledge_base.values():
-        for gejala_code, gejala_data in penyakit_data['symptoms'].items():
+    for data_kerusakan in knowledge_base.values():
+        for gejala_code, gejala_data in data_kerusakan['symptoms'].items():
             if gejala_code not in symptoms:
                 symptoms[gejala_code] = gejala_data['name']
     return render_template('base.html', symptoms=symptoms)
@@ -118,11 +115,19 @@ def diagnose_route():
 
     # Lakukan diagnosis berdasarkan gejala
     hasil_diagnosis = diagnose(gejala_user, knowledge_base)
+    
     # Filter hasil diagnosis untuk nilai CF > 0
     hasil_diagnosis_filtered = [diagnosis for diagnosis in hasil_diagnosis if diagnosis[1] > 0]
+    hasil_diagnosis_filtered.sort(key=lambda x: x[1], reverse=True)
+
+    # Jika tidak ada hasil diagnosis dengan CF > 0, tampilkan pesan "tidak ada kerusakan yang terjadi"
+    if not hasil_diagnosis_filtered:
+       return render_template('hasil.html', diagnosis_results=[], no_damage_message="Tidak ada kerusakan yang terjadi.")
+    
 
     # Render halaman hasil diagnosis
     return render_template('hasil.html', diagnosis_results=hasil_diagnosis_filtered)
+
 
 if __name__ == '__main__':
     main.run(debug=True)
