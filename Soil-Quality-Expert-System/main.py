@@ -34,7 +34,7 @@ def load_knowledge_base_from_file():
                 line = line.strip()
                 if not line:
                     continue
-                if line.startswith("K"):  # Baris yang memulai kode penyakit
+                if line.startswith("K"):  # Baris yang memulai kode kerusakan
                     kode_kerusakan, nama_kerusakan = line.split(" - ")
                     knowledge_base[kode_kerusakan] = {'name': nama_kerusakan, 'symptoms': {}, 'solution': ''}
                 elif line.startswith("T"):  # Baris yang memulai kode gejala
@@ -60,9 +60,9 @@ def diagnose(gejala_user, knowledge_base):
         cf_combine = 0.0
         match_found = False
         
-        # Iterasi melalui setiap gejala untuk penyakit
+        # Iterasi melalui setiap gejala untuk kerusakan
         for gejala_code, cf_pakar in data_kerusakan['symptoms'].items():
-            # Cek apakah gejala user cocok dengan gejala penyakit
+            # Cek apakah gejala user cocok dengan gejala kerusakan
             cf_pengguna = gejala_user.get(gejala_code, 0.0)
             if cf_pengguna > 0:  # Hanya jika ada CF dari user
                 match_found = True  # Menandakan ada kecocokan gejala
